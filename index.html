@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>ParkSmart – Find & Reserve Parking Instantly</title>
+  <meta name="description" content="ParkSmart helps you find, reserve, and navigate to nearby parking spots in real-time. EV charging, digital payments, and smart timers included." />
+  <meta name="theme-color" content="#0d0f1a" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <!-- Splash Screen -->
+  <div id="splash-screen" class="splash">
+    <div class="splash-logo">
+      <div class="splash-icon">
+        <svg width="56" height="56" viewBox="0 0 56 56" fill="none">
+          <rect width="56" height="56" rx="16" fill="url(#splashGrad)"/>
+          <text x="28" y="36" text-anchor="middle" font-size="26" font-weight="900" fill="white" font-family="Inter">P</text>
+          <defs>
+            <linearGradient id="splashGrad" x1="0" y1="0" x2="56" y2="56">
+              <stop offset="0%" stop-color="#00d4aa"/>
+              <stop offset="100%" stop-color="#7c3aed"/>
+            </linearGradient>
+          </defs>
+        </svg>
+      </div>
+      <h1 class="splash-title">ParkSmart</h1>
+      <p class="splash-sub">Find. Reserve. Park.</p>
+    </div>
+    <div class="splash-loader">
+      <div class="loader-bar"><div class="loader-fill"></div></div>
+    </div>
+  </div>
+
+  <!-- App Shell -->
+  <div id="app" class="app hidden">
+
+    <!-- ====== MAP VIEW ====== -->
+    <div id="view-map" class="view active">
+      <div class="map-header">
+        <div class="map-header-top">
+          <div class="greeting-block">
+            <div class="app-logo-sm">
+              <svg width="28" height="28" viewBox="0 0 56 56" fill="none"><rect width="56" height="56" rx="14" fill="url(#hGrad)"/><text x="28" y="37" text-anchor="middle" font-size="28" font-weight="900" fill="white" font-family="Inter">P</text><defs><linearGradient id="hGrad" x1="0" y1="0" x2="56" y2="56"><stop offset="0%" stop-color="#00d4aa"/><stop offset="100%" stop-color="#7c3aed"/></linearGradient></defs></svg>
+            </div>
+            <div>
+              <p class="greeting-label">Good day,</p>
+              <p class="greeting-name">Alex 👋</p>
+            </div>
+          </div>
+          <button class="icon-btn" id="notif-btn" onclick="showNotifications()" aria-label="Notifications">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+            <span class="notif-dot"></span>
+          </button>
+        </div>
+        <div class="search-bar-wrap">
+          <div class="search-bar" onclick="focusSearch()">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <span class="search-placeholder">Search parking, address...</span>
+          </div>
+          <button class="filter-btn" onclick="openFilters()" aria-label="Filters">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="4" y1="6" x2="20" y2="6"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="11" y1="18" x2="13" y2="18"/></svg>
+          </button>
+        </div>
+        <!-- Filter Chips -->
+        <div class="filter-chips">
+          <button class="chip active" onclick="toggleChip(this,'all')">All</button>
+          <button class="chip" onclick="toggleChip(this,'available')">
+            <span class="dot green"></span>Available
+          </button>
+          <button class="chip" onclick="toggleChip(this,'ev')">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>EV
+          </button>
+          <button class="chip" onclick="toggleChip(this,'covered')">Covered</button>
+          <button class="chip" onclick="toggleChip(this,'cheap')">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>Cheap
+          </button>
+        </div>
+      </div>
+
+      <!-- Map Area -->
+      <div class="map-container" id="map-container">
+        <canvas id="map-canvas"></canvas>
+        <!-- User location pulse -->
+        <div class="user-marker" id="user-marker">
+          <div class="user-pulse"></div>
+          <div class="user-dot"></div>
+        </div>
+        <!-- Map Pins -->
+        <div id="map-pins"></div>
+        <!-- Map controls -->
+        <div class="map-controls">
+          <button class="map-ctrl-btn" onclick="centerMap()" aria-label="Center map">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg>
+          </button>
+          <button class="map-ctrl-btn" onclick="zoomIn()" aria-label="Zoom in">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
+          </button>
+          <button class="map-ctrl-btn" onclick="zoomOut()" aria-label="Zoom out">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
+          </button>
+          <button class="map-ctrl-btn ev-toggle" onclick="toggleEVFilter()" aria-label="EV filter" id="ev-toggle-btn">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Bottom Sheet -->
+      <div class="bottom-sheet" id="bottom-sheet">
+        <div class="sheet-handle" id="sheet-handle"></div>
+        <div class="sheet-header">
+          <h2 class="sheet-title">Nearby Parking</h2>
+          <div class="sheet-meta">
+            <span class="meta-badge green"><span class="dot green sm"></span>12 Available</span>
+            <span class="meta-badge blue"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg> 4 EV</span>
+          </div>
+        </div>
+        <div class="parking-list" id="parking-list"></div>
+      </div>
+    </div>
+
+    <!-- ====== FIND VIEW ====== -->
+    <div id="view-find" class="view">
+      <div class="view-header">
+        <h2 class="view-title">Find Parking</h2>
+        <p class="view-sub">Search by location or browse nearby</p>
+      </div>
+      <div class="find-search-wrap">
+        <div class="find-search">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input type="text" id="find-input" placeholder="Enter location, street..." oninput="filterParkingList()" />
+        </div>
+      </div>
+      <div class="find-categories">
+        <button class="cat-btn active" onclick="setCat(this,'all')">All</button>
+        <button class="cat-btn" onclick="setCat(this,'mall')">🏬 Mall</button>
+        <button class="cat-btn" onclick="setCat(this,'airport')">✈️ Airport</button>
+        <button class="cat-btn" onclick="setCat(this,'hospital')">🏥 Hospital</button>
+        <button class="cat-btn" onclick="setCat(this,'street')">🛣️ Street</button>
+      </div>
+      <div class="find-list" id="find-list"></div>
+    </div>
+
+    <!-- ====== BOOKING VIEW ====== -->
+    <div id="view-booking" class="view">
+      <div class="view-header">
+        <h2 class="view-title">My Bookings</h2>
+        <p class="view-sub">Active, upcoming & past reservations</p>
+      </div>
+      <div class="booking-tabs">
+        <button class="btab active" onclick="switchBookingTab(this,'active')">Active</button>
+        <button class="btab" onclick="switchBookingTab(this,'upcoming')">Upcoming</button>
+        <button class="btab" onclick="switchBookingTab(this,'history')">History</button>
+      </div>
+      <div id="booking-content"></div>
+    </div>
+
+    <!-- ====== PROFILE VIEW ====== -->
+    <div id="view-profile" class="view">
+      <div class="profile-hero">
+        <div class="profile-avatar">A</div>
+        <h2 class="profile-name">Alex Johnson</h2>
+        <p class="profile-email">alex.j@email.com</p>
+        <div class="profile-stats">
+          <div class="pstat"><span class="pstat-val">24</span><span class="pstat-lbl">Bookings</span></div>
+          <div class="pstat-div"></div>
+          <div class="pstat"><span class="pstat-val">₹1,240</span><span class="pstat-lbl">Saved</span></div>
+          <div class="pstat-div"></div>
+          <div class="pstat"><span class="pstat-val">4.9★</span><span class="pstat-lbl">Rating</span></div>
+        </div>
+      </div>
+      <div class="profile-menu">
+        <div class="pmenu-section">
+          <p class="pmenu-label">Account</p>
+          <button class="pmenu-item" onclick="showProfileModal('vehicle')">
+            <span class="pmenu-icon">🚗</span>My Vehicles
+            <svg class="pmenu-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+          </button>
+          <button class="pmenu-item" onclick="showProfileModal('payment')">
+            <span class="pmenu-icon">💳</span>Payment Methods
+            <svg class="pmenu-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+          </button>
+          <button class="pmenu-item" onclick="showProfileModal('notifications')">
+            <span class="pmenu-icon">🔔</span>Notifications
+            <svg class="pmenu-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+          </button>
+        </div>
+        <div class="pmenu-section">
+          <p class="pmenu-label">Support</p>
+          <button class="pmenu-item" onclick="openIssueReport()">
+            <span class="pmenu-icon">⚠️</span>Report an Issue
+            <svg class="pmenu-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+          </button>
+          <button class="pmenu-item" onclick="showProfileModal('faq')">
+            <span class="pmenu-icon">❓</span>Help & FAQ
+            <svg class="pmenu-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+          </button>
+          <button class="pmenu-item" onclick="showProfileModal('about')">
+            <span class="pmenu-icon">ℹ️</span>About ParkSmart
+            <svg class="pmenu-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+          </button>
+        </div>
+        <button class="logout-btn">Sign Out</button>
+      </div>
+    </div>
+
+    <!-- Bottom Nav -->
+    <nav class="bottom-nav" id="bottom-nav">
+      <button class="nav-item active" id="nav-map" onclick="switchView('map')" aria-label="Map">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21"/><line x1="9" y1="3" x2="9" y2="18"/><line x1="15" y1="6" x2="15" y2="21"/></svg>
+        <span>Map</span>
+      </button>
+      <button class="nav-item" id="nav-find" onclick="switchView('find')" aria-label="Find">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <span>Find</span>
+      </button>
+      <button class="nav-item" id="nav-booking" onclick="switchView('booking')" aria-label="Bookings">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        <span>Bookings</span>
+      </button>
+      <button class="nav-item" id="nav-profile" onclick="switchView('profile')" aria-label="Profile">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        <span>Profile</span>
+      </button>
+    </nav>
+  </div>
+
+  <!-- ====== MODALS ====== -->
+
+  <!-- Parking Detail Modal -->
+  <div id="modal-detail" class="modal-overlay hidden" onclick="closeModalOutside(event,'modal-detail')">
+    <div class="modal modal-tall" id="detail-modal-content">
+      <div class="modal-handle"></div>
+      <div id="detail-content"></div>
+    </div>
+  </div>
+
+  <!-- Slot Selection Modal -->
+  <div id="modal-slots" class="modal-overlay hidden" onclick="closeModalOutside(event,'modal-slots')">
+    <div class="modal modal-tall" id="slots-modal-content">
+      <div class="modal-handle"></div>
+      <div id="slots-content"></div>
+    </div>
+  </div>
+
+  <!-- Reservation Modal -->
+  <div id="modal-reserve" class="modal-overlay hidden" onclick="closeModalOutside(event,'modal-reserve')">
+    <div class="modal" id="reserve-modal-content">
+      <div class="modal-handle"></div>
+      <div id="reserve-content"></div>
+    </div>
+  </div>
+
+  <!-- Payment Modal -->
+  <div id="modal-payment" class="modal-overlay hidden" onclick="closeModalOutside(event,'modal-payment')">
+    <div class="modal" id="payment-modal-content">
+      <div class="modal-handle"></div>
+      <div id="payment-content"></div>
+    </div>
+  </div>
+
+  <!-- Navigation Modal -->
+  <div id="modal-nav" class="modal-overlay hidden" onclick="closeModalOutside(event,'modal-nav')">
+    <div class="modal" id="nav-modal-content">
+      <div class="modal-handle"></div>
+      <div id="nav-content"></div>
+    </div>
+  </div>
+
+  <!-- Timer Modal -->
+  <div id="modal-timer" class="modal-overlay hidden" onclick="closeModalOutside(event,'modal-timer')">
+    <div class="modal" id="timer-modal-content">
+      <div class="modal-handle"></div>
+      <div id="timer-content"></div>
+    </div>
+  </div>
+
+  <!-- Issue Report Modal -->
+  <div id="modal-issue" class="modal-overlay hidden" onclick="closeModalOutside(event,'modal-issue')">
+    <div class="modal" id="issue-modal-content">
+      <div class="modal-handle"></div>
+      <div id="issue-content"></div>
+    </div>
+  </div>
+
+  <!-- Notification Panel -->
+  <div id="modal-notif" class="modal-overlay hidden" onclick="closeModalOutside(event,'modal-notif')">
+    <div class="modal" id="notif-modal-content">
+      <div class="modal-handle"></div>
+      <div id="notif-content"></div>
+    </div>
+  </div>
+
+  <!-- Filter Modal -->
+  <div id="modal-filter" class="modal-overlay hidden" onclick="closeModalOutside(event,'modal-filter')">
+    <div class="modal" id="filter-modal-content">
+      <div class="modal-handle"></div>
+      <div id="filter-content"></div>
+    </div>
+  </div>
+
+  <!-- Generic Profile Modal -->
+  <div id="modal-profile" class="modal-overlay hidden" onclick="closeModalOutside(event,'modal-profile')">
+    <div class="modal" id="profile-modal-content">
+      <div class="modal-handle"></div>
+      <div id="profile-modal-inner"></div>
+    </div>
+  </div>
+
+  <!-- Toast Container -->
+  <div id="toast-container"></div>
+
+  <!-- Active Timer Pill -->
+  <div id="timer-pill" class="timer-pill hidden" onclick="openTimerModal()">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+    <span id="timer-pill-text">00:00</span>
+    <span class="timer-pill-label">Parked</span>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
